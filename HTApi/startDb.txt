@@ -1,0 +1,10 @@
+Install postgreSQL
+
+Add bin folder to your path C:\Program Files\PostgreSQL\16\bin
+
+Start server mannually pg_ctl -D "C:\Program Files\PostgreSQL\16\data" start
+
+If the above line does not work: initdb -D "C:\Program Files\PostgreSQL\16\data" -E=UTF8
+
+
+Then try to run on port 5432
