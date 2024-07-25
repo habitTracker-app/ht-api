@@ -1,5 +1,8 @@
-﻿using HTApi.DTOs;
+﻿using HTApi.Data.Repos;
+using HTApi.DTOs;
 using HTApi.Models;
+using HTApi.Models.ActionModels;
+using HTApi.Services;
 using HTAPI.Data;
 using HTAPI.Models;
 using HTAPI.Models.ActionModels;
@@ -90,8 +93,8 @@ namespace HTAPI.Controllers
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
                 return BadRequest(new { errors });
-        }
-        
+            }
+
             ValidationResult emailExists = _valid.ValidateIfCanSigninEmail(body.Email);
 
             if (!emailExists.IsValid) { return StatusCode(400, _getErrorMessagesString(emailExists)); }
@@ -102,31 +105,31 @@ namespace HTAPI.Controllers
                 var attempt = await _sm.PasswordSignInAsync(user, body.Password, body.RememberMe, false);
 
                 if (attempt.Succeeded)
-            {
+                {
                     if(!user.UserActive) { await _userRepo.UpdateUserActiveStatus(user); }
                  
                     var token = _jwt.GenerateJwtToken(user.Email, body.RememberMe, user.UUID, user.Id);
                     UserDTO userDto = new UserDTO(_db.Users.First(u => u.Id == user.Id));
 
                     return Ok(new { Token = token, User = userDto });
-            }
-            else
-            {
+                }
+                else
+                {
                     if (attempt.IsNotAllowed) { return Unauthorized("Invalid credentials - password"); }
 
                     throw new Exception("Password incorrect.");
                 }
             }catch(Exception ex)
-                {
+            {
                 return StatusCode(500, ex.Message);
-                }
-                }
+            }
+        }
 
         [Authorize]
         [HttpGet]
         [Route("/users/all")]
         public async Task<ActionResult<List<UserDTO>>> GetAllUsers([FromQuery] int? count, [FromQuery] int? page)
-                {
+        {
             if(page == null) { page = 1; }
             if(count == null) { count = 1; }
 
@@ -134,7 +137,7 @@ namespace HTAPI.Controllers
 
             return Ok(new { users });
         }
-        
+
         [Authorize]
         [HttpPost]
         [Route("/users/delete")]
@@ -142,10 +145,6 @@ namespace HTAPI.Controllers
             int? uuid = body.uuid;
             string? password = body.password;
             try
-        }
-        private Country? _getCountry(int countryId)
-        {
-            if (_db.Country.Any(c => c.Id == countryId))
             {
                 if(uuid == null) { throw new Exception("UUID is a mandatory parameter."); }
                 
@@ -155,15 +154,13 @@ namespace HTAPI.Controllers
                 var claims = claimsIdentity?.Claims;
 
                 if(claims == null) { throw new Exception("No claims found in jwt."); }
-        
+
                 UserClaimsDTO userClaimsDTO = new UserClaimsDTO
-        {
-            ValidationResult result = new ValidationResult
-            {
+                {
                     Email = claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value,
                     Id = claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value,
                     UUID = claims.FirstOrDefault(c => c.Type == ClaimTypes.SerialNumber)?.Value
-            };
+                };
 
                 User? requester = _db.Users.FirstOrDefault(u => (u.Id == userClaimsDTO.Id) && 
                                                                 (u.UUID.ToString() == userClaimsDTO.UUID.ToString()) && 
@@ -186,17 +183,13 @@ namespace HTAPI.Controllers
             }
         }
         private string _getErrorMessagesString(ValidationResult validationResult)
-            {
+        {
             string errors = "";
             foreach(string msg in validationResult.Messages)
-                int age = diff.Days / 365;
-                if(age < 14)
-                {
+            {
                 errors += $"{msg}--";
-                }
             }
             return errors;
-            return result;
         }
     }
 }
