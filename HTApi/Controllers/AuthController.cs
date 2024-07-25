@@ -4,9 +4,12 @@ using HTAPI.Data;
 using HTAPI.Models;
 using HTAPI.Models.ActionModels;
 using HTAPI.Models.DemographicData;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Net;
+using System.Security.Claims;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace HTAPI.Controllers
@@ -19,12 +22,22 @@ namespace HTAPI.Controllers
         private readonly UserManager<User> _um;
         private readonly SignInManager<User> _sm;
         private readonly AppDbContext _db;
+        private readonly ITokenService _jwt;
+        private readonly IValidationService _valid;
+        private readonly IUserRepository _userRepo;
+        private readonly IGenderRepository _genderRepository;
+        private readonly ICountryRepository _countryRepository;
 
-        public AuthController(UserManager<User> um, SignInManager<User> sm, AppDbContext db)
+        public AuthController(UserManager<User> um, SignInManager<User> sm, AppDbContext db, ITokenService jwt, IValidationService valid, IUserRepository ur, IGenderRepository gr, ICountryRepository cr)
         {
             _um = um;
             _sm = sm;
             _db = db;
+            _jwt = jwt;
+            _valid = valid;
+            _userRepo = ur;
+            _genderRepository = gr;
+            _countryRepository = cr;
         }
 
         [HttpPost]
