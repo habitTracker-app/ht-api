@@ -7,27 +7,38 @@ using HTAPI.Models;
 using HTAPI.Data;
 using Microsoft.Extensions.Options;
 using System.Text.Json.Serialization;
+using HTApi.Services;
+using HTApi.Data.Repos;
 
 var builder = WebApplication.CreateBuilder(args);
 
 ConfigurationManager config = builder.Configuration;
 
+
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
 
 // Add services to the container.
 builder.Services.AddControllers()
     .AddJsonOptions(opt =>
     {
         opt.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All);
+
         opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
 
     });
 
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(connectionString: builder.Configuration.GetConnectionString("AuthApiDb"));
-    
 });
+
+builder.Services.AddSingleton<ITokenService>(sp => new TokenService(config));
+builder.Services.AddScoped<IValidationService>(sp => new ValidationService(sp));
+builder.Services.AddScoped<IUserRepository>(sp => new UserRepository(sp));
+builder.Services.AddScoped<IGenderRepository>(sp => new GenderRepository(sp));
+builder.Services.AddScoped<ICountryRepository>(sp => new CountryRepository(sp));
 
 builder.Services.AddIdentity<User, IdentityRole>(options =>
 {
@@ -40,7 +51,6 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 })
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
-
 
 
 builder.Services.AddAuthentication(options =>
@@ -58,8 +68,8 @@ builder.Services.AddAuthentication(options =>
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
-            ValidIssuer = config["JWT: ValidIssuer"],
-            ValidAudience = config["JWT: ValidAudience"],
+            ValidIssuer = config["JWT:ValidIssuer"],
+            ValidAudience = config["JWT:ValidAudience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["JWT:Secret"]))
         };
     });
@@ -87,7 +97,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
-{
+{   
     var s = scope.ServiceProvider;
     try
     {

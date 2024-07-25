@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HTApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b9a7a554f1ca7d1ece2fde1d1723f8e76d43a991")]
 [assembly: System.Reflection.AssemblyProductAttribute("HTApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HTApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
