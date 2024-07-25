@@ -158,54 +158,81 @@ namespace HTAPI.Controllers
                 if(confirmPswd == null) { 
                     result.Invalidate("The field confirm password must be passed.");
                 }
-                if(confirmPswd != password)
-                {
-                    result.Invalidate("Passwords don't match.");
-                }
-            }
 
-            return result;
+        [Authorize]
+        [HttpGet]
+        [Route("/users/all")]
+        public async Task<ActionResult<List<UserDTO>>> GetAllUsers([FromQuery] int? count, [FromQuery] int? page)
+                {
+            if(page == null) { page = 1; }
+            if(count == null) { count = 1; }
+
+            List<UserDTO> users = await _userRepo.GetAllUsers((int)page, (int)count);
+
+            return Ok(new { users });
         }
         
-        private Gender? _getGender(int genderId)
-        {
-            if(_db.Gender.Any(g => g.Id == genderId))
-            {
-                return _db.Gender.Find(genderId);
-            }
-            return null;
+        [Authorize]
+        [HttpPost]
+        [Route("/users/delete")]
+        public async Task<ActionResult> DeleteUser([FromBody] DeleteUser body) {
+            int? uuid = body.uuid;
+            string? password = body.password;
+            try
         }
         private Country? _getCountry(int countryId)
         {
             if (_db.Country.Any(c => c.Id == countryId))
             {
-                return _db.Country.Find(countryId);
-            }
-            return null;
-        }
+                if(uuid == null) { throw new Exception("UUID is a mandatory parameter."); }
+                
+                User? user = _db.Users.FirstOrDefault(u => u.UUID == uuid) ?? throw new Exception("This user does not exist.");
+
+                ClaimsIdentity claimsIdentity = User.Identity as ClaimsIdentity;
+                var claims = claimsIdentity?.Claims;
+
+                if(claims == null) { throw new Exception("No claims found in jwt."); }
         
-        private ValidationResult _validateBirthDate(DateTime bd)
+                UserClaimsDTO userClaimsDTO = new UserClaimsDTO
         {
             ValidationResult result = new ValidationResult
             {
-                IsValid = true,
-                Messages = []
+                    Email = claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value,
+                    Id = claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value,
+                    UUID = claims.FirstOrDefault(c => c.Type == ClaimTypes.SerialNumber)?.Value
             };
 
-            if(bd.Date >= DateTime.UtcNow.Date)
-            {
-                result.Invalidate("Birthdate must be before today.");
-            }else
-            {
-                TimeSpan diff = DateTime.UtcNow - bd;
+                User? requester = _db.Users.FirstOrDefault(u => (u.Id == userClaimsDTO.Id) && 
+                                                                (u.UUID.ToString() == userClaimsDTO.UUID.ToString()) && 
+                                                                (u.Email == userClaimsDTO.Email));
 
+                if(requester == null) { throw new Exception("This user does not exist."); }
+
+                if(user != requester) { throw new Exception("You don't have permission to delete this user."); }
+
+
+                bool isPasswordCorrect = await _um.CheckPasswordAsync(user, password);
+                if(!isPasswordCorrect) { throw new Exception("Password is incorrect."); }
+
+
+                await _userRepo.DeleteUser((int)uuid);
+                return NoContent();
+            }catch(Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+        private string _getErrorMessagesString(ValidationResult validationResult)
+            {
+            string errors = "";
+            foreach(string msg in validationResult.Messages)
                 int age = diff.Days / 365;
                 if(age < 14)
                 {
-                    result.Invalidate("User must be at least 14 years old to register.");
+                errors += $"{msg}--";
                 }
             }
-
+            return errors;
             return result;
         }
     }
