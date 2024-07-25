@@ -60,5 +60,12 @@ namespace HTAPI.Models
             }
 
         }
+
+
+        public void ChangeUserActiveStatus()
+        {
+            this.UserActive = !this.UserActive;
+            this.UpdatedAt = DateTime.UtcNow;
+        }
     }
 }
