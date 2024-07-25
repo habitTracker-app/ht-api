@@ -117,4 +117,3 @@ C:\Users\c.marinho.barreto\Documents\HabitTrackerApp\HabitTrackerApp\HTApi\obj\D
 C:\Users\c.marinho.barreto\Documents\HabitTrackerApp\HabitTrackerApp\HTApi\obj\Debug\net8.0\HTApi.pdb
 C:\Users\c.marinho.barreto\Documents\HabitTrackerApp\HabitTrackerApp\HTApi\obj\Debug\net8.0\HTApi.genruntimeconfig.cache
 C:\Users\c.marinho.barreto\Documents\HabitTrackerApp\HabitTrackerApp\HTApi\obj\Debug\net8.0\ref\HTApi.dll
-C:\Users\c.marinho.barreto\Documents\HabitTrackerApp\HabitTrackerApp\HTApi\obj\Debug\net8.0\HTApi.sourcelink.json

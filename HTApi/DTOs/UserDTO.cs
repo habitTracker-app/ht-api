@@ -9,6 +9,7 @@ namespace HTApi.DTOs
 {
     public class UserDTO
     {
+        public String Id { get; set; }
         public int UUID { get; set; }
 
         public string FName { get; set; }
@@ -36,6 +37,7 @@ namespace HTApi.DTOs
 
         public UserDTO(User u)
         {
+            this.Id = u.Id;
             this.UUID = u.UUID;
             this.FName = u.FName;
             this.LName = u.LName;
