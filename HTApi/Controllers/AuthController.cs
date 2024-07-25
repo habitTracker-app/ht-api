@@ -44,12 +44,12 @@ namespace HTAPI.Controllers
         [Route("/register")]
         public async Task<ActionResult<User>> Register([FromBody]RegisterUser body)
         {
-            ValidationResult emailValid = _verifyIfEmailExists(body.Email);
-            ValidationResult pswdValid = _isPasswordValid(body.Password, body.ConfirmPassword);
-            ValidationResult birthdateValid = _validateBirthDate(body.BirthDate);
+            ValidationResult emailValid = _valid.ValidateIfCanRegisterEmail(body.Email);
+            ValidationResult pswdValid = _valid.ValidatePassword(body.Password, body.ConfirmPassword);
+            ValidationResult birthdateValid = _valid.ValidateBirthDate(body.BirthDate);
 
-            Gender? gender = _getGender(body.GenderId);
-            Country? country = _getCountry(body.CountryId);
+            Gender? gender = _genderRepository.GetGender(body.GenderId);
+            Country? country = _countryRepository.GetCountry(body.CountryId);
             
             if (!ModelState.IsValid || body == null)
             {
@@ -59,44 +59,10 @@ namespace HTAPI.Controllers
 
             if (emailValid.IsValid && pswdValid.IsValid && body.TermsAccepted && gender != null && country != null && birthdateValid.IsValid)
             {
-                User user = new User
-                {
-                    Email = body.Email,
-                    UserName = $"{body.FName}{body.LName}",
-                    Gender = gender, // todo
-                    Country = country, // todo
-                    AcceptedTerms = body.TermsAccepted,
-                    UserActive = true,
-                    BirthDate = body.BirthDate,
-                    FName = body.FName,
-                    LName = body.LName,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                };
-
-                try
-                {
-                    user.SetUID(_db);
-
-                    var res = await _um.CreateAsync(user, body.Password);
-
-                    if (res.Succeeded)
-                    {
-                        User createdUser = _db.Users.First(u => u.UUID == user.UUID);
-                        UserDTO toReturn = new UserDTO(createdUser);
-                        return Ok(toReturn);
-                    }
-                    else
-                    {
-                        string errors = "";
-                        foreach (var err in res.Errors)
-                        {
-                            errors += $"{err.Description}--";
-                        }
-                        return StatusCode(500, errors);
-                    }
-                }catch(Exception ex)
-                {
+                try { 
+                    UserDTO userDto = await _userRepo.CreateUser(body, gender, country);
+                    return Ok(userDto);
+                } catch (Exception ex) {
                     return StatusCode(500, ex.Message);
                 }
             }
