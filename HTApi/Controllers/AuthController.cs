@@ -116,47 +116,44 @@ namespace HTAPI.Controllers
         }
 
 
-
-        private ValidationResult _verifyIfEmailExists(string email)
+        [HttpPost]
+        [Route("/signin")]
+        public async Task<ActionResult<User>> Login([FromBody] LoginUser body)
         {
-            var result = new ValidationResult { IsValid = true, Messages = [] };
-            var findUserByEmail = _db.Users.Any(u => u.Email == email);
-            if (findUserByEmail)
+            if (body == null || !ModelState.IsValid)
             {
-                result.Invalidate("This email is already registered.");
-            }
-            return result;
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                return BadRequest(new { errors });
         }
         
-        private ValidationResult _isPasswordValid(string password, string confirmPswd) {
-            ValidationResult result = new ValidationResult
-            {
-                IsValid = true,
-                Messages = []
-            };
+            ValidationResult emailExists = _valid.ValidateIfCanSigninEmail(body.Email);
 
-            if(password == null) {
-                result.Invalidate("Password cannot be null");
+            if (!emailExists.IsValid) { return StatusCode(400, _getErrorMessagesString(emailExists)); }
+
+            try
+            {
+                User user = _db.Users.First(u => u.Email == body.Email);
+                var attempt = await _sm.PasswordSignInAsync(user, body.Password, body.RememberMe, false);
+
+                if (attempt.Succeeded)
+            {
+                    if(!user.UserActive) { await _userRepo.UpdateUserActiveStatus(user); }
+                 
+                    var token = _jwt.GenerateJwtToken(user.Email, body.RememberMe, user.UUID, user.Id);
+                    UserDTO userDto = new UserDTO(_db.Users.First(u => u.Id == user.Id));
+
+                    return Ok(new { Token = token, User = userDto });
             }
             else
             {
-                if (password.Length < 8 ) {
-                    result.Invalidate("Password should have 8+ characters.");
-                }
+                    if (attempt.IsNotAllowed) { return Unauthorized("Invalid credentials - password"); }
 
-                if (!password.Any(char.IsUpper)) {
-                    result.Invalidate("Password must contain at least 1 uppercase letter.");
+                    throw new Exception("Password incorrect.");
                 }
-                if (!password.Any(char.IsLower))
+            }catch(Exception ex)
                 {
-                    result.Invalidate("Password must contain at least 1 lowercase letter.");
+                return StatusCode(500, ex.Message);
                 }
-                if (!password.Any(char.IsNumber))
-                {
-                    result.Invalidate("Password must contain at least 1 digit.");
-                }
-                if(confirmPswd == null) { 
-                    result.Invalidate("The field confirm password must be passed.");
                 }
 
         [Authorize]
