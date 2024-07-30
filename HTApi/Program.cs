@@ -25,7 +25,6 @@ builder.Services.AddControllers()
         opt.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All);
 
         opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
-
     });
 
 
@@ -34,11 +33,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString: builder.Configuration.GetConnectionString("AuthApiDb"));
 });
 
-builder.Services.AddSingleton<ITokenService>(sp => new TokenService(config));
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ITokenService>(sp => new TokenService(config, sp));
 builder.Services.AddScoped<IValidationService>(sp => new ValidationService(sp));
 builder.Services.AddScoped<IUserRepository>(sp => new UserRepository(sp));
 builder.Services.AddScoped<IGenderRepository>(sp => new GenderRepository(sp));
 builder.Services.AddScoped<ICountryRepository>(sp => new CountryRepository(sp));
+builder.Services.AddScoped<IFriendshipRepository>(sp => new FriendshipRepository(sp));
 
 builder.Services.AddIdentity<User, IdentityRole>(options =>
 {
