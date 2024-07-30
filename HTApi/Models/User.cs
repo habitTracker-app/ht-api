@@ -46,26 +46,5 @@ namespace HTAPI.Models
         public ICollection<Challenge> Challenges { get; set; } = new List<Challenge>();
 
         public ICollection<Progress> Progresses { get; set; } = new List<Progress>();
-
-        public void SetUID(AppDbContext db)
-        {
-            if (!db.Users.Any() || db.Users.ToList().Count() == 0)
-            {
-                UUID = 10001;
-            }
-            else
-            {
-                int maxId = db.Users.Max(u => u.UUID);
-                this.UUID = maxId + 1;
-            }
-
-        }
-
-
-        public void ChangeUserActiveStatus()
-        {
-            this.UserActive = !this.UserActive;
-            this.UpdatedAt = DateTime.UtcNow;
-        }
     }
 }
