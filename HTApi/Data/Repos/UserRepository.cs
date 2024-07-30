@@ -76,7 +76,8 @@ namespace HTApi.Data.Repos
 
         public async Task UpdateUserActiveStatus(User user)
         {
-            user.ChangeUserActiveStatus();
+            user.UserActive = !user.UserActive;
+            user.UpdatedAt = DateTime.UtcNow;
             _db.Users.Update(user);
             await _db.SaveChangesAsync();
         }
