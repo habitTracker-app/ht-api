@@ -4,6 +4,7 @@ using HTAPI.Models;
 using HTAPI.Models.ActionModels;
 using HTAPI.Models.DemographicData;
 using Microsoft.AspNetCore.Identity;
+using System.Text.RegularExpressions;
 
 namespace HTApi.Data.Repos
 {
@@ -44,7 +45,7 @@ namespace HTApi.Data.Repos
             user = new User
             {
                 Email = body.Email,
-                UserName = $"{body.FName}{body.LName}",
+                UserName = NormalizeString($"{body.FName}{body.LName}"),
                 Gender = gender, // todo
                 Country = country, // todo
                 AcceptedTerms = body.TermsAccepted,
@@ -55,8 +56,7 @@ namespace HTApi.Data.Repos
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
             };
-
-            user.SetUID(_db);
+            this.SetUID(user);
             var res = await _um.CreateAsync(user, body.Password);
             if (res.Succeeded)
             {
@@ -126,6 +126,24 @@ namespace HTApi.Data.Repos
                 throw new Exception(e.Message);
             }
 
+        }
+
+        private string NormalizeString(string input)
+        {
+            // Use a regular expression to remove any character that is not a letter or digit
+            return Regex.Replace(input, @"[^a-zA-Z0-9]", "");
+        }
+        private void SetUID(User user)
+        {
+            if (!_db.Users.Any() || _db.Users.ToList().Count() == 0)
+            {
+                user.UUID = 10001;
+            }
+            else
+            {
+                int maxId = _db.Users.Max(u => u.UUID);
+                user.UUID = maxId + 1;
+            }
         }
     }
 }
