@@ -100,6 +100,11 @@ namespace HTAPI.Data
                 .WithMany()
                 .HasForeignKey(f => f.TargetId)
                 .OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<Friendship>()
+                .HasOne(f => f.Status)
+                .WithMany()
+                .HasForeignKey(f => f.StatusId)
+                .OnDelete(DeleteBehavior.SetNull);
 
 
             // Friendship Status config
