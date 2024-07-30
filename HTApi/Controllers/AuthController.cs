@@ -147,30 +147,12 @@ namespace HTAPI.Controllers
                 
                 User? user = _db.Users.FirstOrDefault(u => u.UUID == uuid) ?? throw new Exception("This user does not exist.");
 
-                ClaimsIdentity claimsIdentity = User.Identity as ClaimsIdentity;
-                var claims = claimsIdentity?.Claims;
-
-                if(claims == null) { throw new Exception("No claims found in jwt."); }
-
-                UserClaimsDTO userClaimsDTO = new UserClaimsDTO
-                {
-                    Email = claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value,
-                    Id = claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value,
-                    UUID = claims.FirstOrDefault(c => c.Type == ClaimTypes.SerialNumber)?.Value
-                };
-
-                User? requester = _db.Users.FirstOrDefault(u => (u.Id == userClaimsDTO.Id) && 
-                                                                (u.UUID.ToString() == userClaimsDTO.UUID.ToString()) && 
-                                                                (u.Email == userClaimsDTO.Email));
-
-                if(requester == null) { throw new Exception("This user does not exist."); }
+                User? requester = _jwt.GetUserByJWT();
 
                 if(user != requester) { throw new Exception("You don't have permission to delete this user."); }
 
-
                 bool isPasswordCorrect = await _um.CheckPasswordAsync(user, password);
                 if(!isPasswordCorrect) { throw new Exception("Password is incorrect."); }
-
 
                 await _userRepo.DeleteUser((int)uuid);
                 return NoContent();
