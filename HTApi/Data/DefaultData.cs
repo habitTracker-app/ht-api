@@ -1,5 +1,6 @@
 ﻿using HTAPI.Models.Challenges;
 using HTAPI.Models.DemographicData;
+using HTAPI.Models.Friendships;
 
 namespace HTAPI.Data
 {
@@ -212,6 +213,13 @@ namespace HTAPI.Data
 
         };
 
+        public List<FriendshipStatus> FriendshipStatuses = [
+            new FriendshipStatus { Status = "pending" },
+            new FriendshipStatus { Status = "approved" },
+            new FriendshipStatus { Status = "denied" },
+            new FriendshipStatus { Status = "cancelled" },
+            new FriendshipStatus { Status = "removed" },
+        ];
 
         public List<ChallengeCategory> ChallengeCategories = new List<ChallengeCategory>()
         {
