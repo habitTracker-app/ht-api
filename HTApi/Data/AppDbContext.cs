@@ -34,6 +34,7 @@ namespace HTAPI.Data
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
+            
             optionsBuilder.UseNpgsql("Host=localhost; Port=5432; Database=habitTracker-api-db; Username=; Password=; Client Encoding=UTF8");
         }
 
@@ -116,6 +117,12 @@ namespace HTAPI.Data
             builder.Entity<User>()
                 .HasIndex(u => u.UUID)
                 .IsUnique();
+            builder.Entity<User>()
+                .Property(u => u.CreatedAt)
+                .HasColumnType("timestamp(6)");
+            builder.Entity<User>()
+               .Property(u => u.UpdatedAt)
+               .HasColumnType("timestamp(6)");
 
             // Frequency config
             builder.Entity<Frequency>()
