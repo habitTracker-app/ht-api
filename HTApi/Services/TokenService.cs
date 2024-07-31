@@ -44,10 +44,8 @@ namespace HTApi.Services
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                    new Claim(ClaimTypes.Email, email),
                     new Claim(ClaimTypes.SerialNumber, uuid.ToString()),
                     new Claim(ClaimTypes.NameIdentifier, identityUserId)
-
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(expiresInMinutes),
                 Issuer = issuer,
@@ -71,18 +69,15 @@ namespace HTApi.Services
 
             UserClaimsDTO userClaimsDTO = new UserClaimsDTO
             {
-                Email = claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value,
                 Id = claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value,
                 UUID = claims.FirstOrDefault(c => c.Type == ClaimTypes.SerialNumber)?.Value
             };
 
-            Console.WriteLine(userClaimsDTO.Email);
             Console.WriteLine(userClaimsDTO.UUID);
             Console.WriteLine(userClaimsDTO.Id);
 
             User? requester = _db.Users.FirstOrDefault(u => (u.Id == userClaimsDTO.Id) &&
-                                                            (u.UUID.ToString() == userClaimsDTO.UUID.ToString()) &&
-                                                            (u.Email == userClaimsDTO.Email));
+                                                            (u.UUID.ToString() == userClaimsDTO.UUID.ToString()));
 
             if (requester == null) { throw new Exception("400 - This user does not exist."); }
 
