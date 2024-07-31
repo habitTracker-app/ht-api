@@ -25,6 +25,7 @@ builder.Services.AddControllers()
         opt.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All);
 
         opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+
     });
 
 
@@ -32,6 +33,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(connectionString: builder.Configuration.GetConnectionString("AuthApiDb"));
 });
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITokenService>(sp => new TokenService(config, sp));
