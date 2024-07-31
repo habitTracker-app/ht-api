@@ -1,4 +1,5 @@
 ﻿using HTApi.DTOs;
+using HTApi.Models.ActionModels;
 using HTAPI.Data;
 using HTAPI.Models;
 using HTAPI.Models.ActionModels;
@@ -15,6 +16,8 @@ namespace HTApi.Data.Repos
         Task UpdateUserActiveStatus(User user);
         Task<List<UserDTO>> GetAllUsers(int page, int itemsPerPage);
         Task DeleteUser(int uuid);
+
+        Task UpdateUser(User user, UpdateUserInfo data, Gender gender, Country country);
     }
     public class UserRepository : IUserRepository
     {
@@ -126,6 +129,31 @@ namespace HTApi.Data.Repos
                 throw new Exception(e.Message);
             }
 
+        }
+
+        public async Task UpdateUser(User user, UpdateUserInfo data, Gender gender, Country country)
+        {
+            try
+            {
+                user.Email = data.Email;
+                user.NormalizedEmail = this.NormalizeString(data.Email).ToUpper();
+                user.LName = data.LName;
+                user.FName = data.FName;
+                user.BirthDate = data.BirthDate;
+                user.Country = country;
+                user.Gender = gender;
+                user.UserName = this.NormalizeString($"{data.FName}{data.LName}");
+                user.NormalizedUserName = this.NormalizeString(user.UserName).ToUpper();
+
+                DateTime now = DateTimeOffset.UtcNow.Date;
+                user.UpdatedAt = now;
+
+                _db.Users.Update(user);
+                await _db.SaveChangesAsync();
+            }catch(Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         private string NormalizeString(string input)
