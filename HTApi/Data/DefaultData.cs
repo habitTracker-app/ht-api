@@ -1,10 +1,22 @@
-﻿using HTAPI.Models.Challenges;
+﻿using HTAPI.Models.ChallengeGoals;
+using HTAPI.Models.Challenges;
 using HTAPI.Models.DemographicData;
+using HTAPI.Models.Friendships;
 
 namespace HTAPI.Data
 {
     public class DefaultData
     {
+        public List<Frequency> Frequencies = new List<Frequency>()
+        {
+            new Frequency { Type = "daily" },
+            new Frequency { Type = "weekly" },
+            new Frequency { Type = "biweekly" },
+            new Frequency { Type = "monthly" },
+            new Frequency { Type = "anually" },
+            new Frequency { Type = "bianually" },
+
+        };
         public List<Gender> Genders = new List<Gender>()
         {
             new Gender(){ Name = "Male", FlagEmoji = "♂️" },
@@ -212,10 +224,48 @@ namespace HTAPI.Data
 
         };
 
+        public List<FriendshipStatus> FriendshipStatuses = [
+            new FriendshipStatus { Status = "pending" },
+            new FriendshipStatus { Status = "approved" },
+            new FriendshipStatus { Status = "denied" },
+            new FriendshipStatus { Status = "cancelled" },
+            new FriendshipStatus { Status = "removed" },
+        ];
 
-        public List<ChallengeCategory> ChallengeCategories = new List<ChallengeCategory>()
-        {
-            // TODO - criar categorias
-        };
+        public List<ChallengeCategory> ChallengeCategories = 
+        [
+            new ChallengeCategory(){ Name = "Fitness and Health", Description = "Build and maintain a healthy, active lifestyle." },
+         
+            new ChallengeCategory(){ Name = "Productivity", Description = "Enhance efficiency and achieve daily goals." },
+            
+            new ChallengeCategory(){ Name = "Mental Well-being", Description = "Cultivate a positive and balanced mental state." },
+
+            new ChallengeCategory(){ Name = "Social Connections", Description = "Strengthen and nurture meaningful relationships." },
+
+            new ChallengeCategory(){ Name = "Personal Development", Description = "Focus on self-improvement and growth." },
+            
+            new ChallengeCategory(){ Name = "Financial Health", Description = "Manage and optimize your financial well-being." },
+            
+            new ChallengeCategory(){ Name = "Environmental Awareness", Description = "Make eco-friendly choices to protect the planet." },
+            
+            new ChallengeCategory(){ Name = "Home and Organization", Description = "Keep your living space tidy and organized." },
+
+            new ChallengeCategory(){ Name = "Creativity and Arts", Description = "Express yourself through creative activities." },
+
+            new ChallengeCategory(){ Name = "Spiritual Growth", Description = "Deepen your spiritual understanding and practice." },
+
+            new ChallengeCategory(){ Name = "Career and Professional Growth", Description = "Advance your career and professional skills." },
+
+            new ChallengeCategory(){ Name = "Sleep", Description = "Improve the quality and consistency of your sleep." },
+
+            new ChallengeCategory(){ Name = "Family and Relationships", Description = "Foster strong and loving family bonds." },
+
+            new ChallengeCategory(){ Name = "Digital Well-being", Description = "Balance and control your digital life." },
+
+            new ChallengeCategory(){ Name = "Work-life Balance", Description = "Achieve harmony between work and personal life." },
+
+            new ChallengeCategory(){ Name = "Self-care", Description = "Prioritize and pamper your own well-being." },
+
+        ];
     }
 }

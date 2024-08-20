@@ -1,4 +1,5 @@
-﻿using HTAPI.Models.DemographicData;
+﻿using HTAPI.Models.ChallengeGoals;
+using HTAPI.Models.DemographicData;
 using System.Diagnostics.Eventing.Reader;
 
 namespace HTAPI.Data
@@ -6,58 +7,84 @@ namespace HTAPI.Data
     public class DBInitializer
     {
         private static IServiceProvider _sp;
+        private static AppDbContext _db;
 
         private static DefaultData _data = new DefaultData();
 
         public static async Task Initialize(IServiceProvider serviceProvider)
         {
             _sp = serviceProvider;
+            _db = _sp.GetService<AppDbContext>() ?? throw new Exception("Service unavailable.");
+
             await CreateCountries();
             await CreateGenders();
             await CreateCategories();
+            await CreateFriendshipStatuses();
+            await CreateFrequencies();
         }
 
         private static async Task CreateGenders()
         {
-            var db = _sp.GetService<AppDbContext>();
-            bool gendersExist = db.Gender.Any();
+            bool gendersExist = _db.Gender.Any();
 
-            if(!gendersExist)
+            if (!gendersExist)
             {
-                foreach(var g in _data.Genders)
+                foreach (var g in _data.Genders)
                 {
-                    await db.Gender.AddAsync(g);
+                    await _db.Gender.AddAsync(g);
                 }
 
-                await db.SaveChangesAsync();
+                await _db.SaveChangesAsync();
             }
-        } 
+        }
 
         private static async Task CreateCountries()
         {
-            var db = _sp.GetService<AppDbContext>();
-            bool countriesExist = db.Country.Any();
+            bool countriesExist = _db.Country.Any();
             if (!countriesExist)
             {
-                foreach(var country in _data.Countries)
+                foreach (var country in _data.Countries)
                 {
-                    await db.Country.AddAsync(country);
+                    await _db.Country.AddAsync(country);
                 }
-                await db.SaveChangesAsync();
+                await _db.SaveChangesAsync();
             }
         }
 
         private static async Task CreateCategories()
         {
-            var db = _sp.GetService<AppDbContext>();
 
-            if (!db.ChallengeCategory.Any())
+            if (!_db.ChallengeCategory.Any())
             {
-                foreach(var item in _data.ChallengeCategories)
+                foreach (var item in _data.ChallengeCategories)
                 {
-                    await db.ChallengeCategory.AddAsync(item);
+                    await _db.ChallengeCategory.AddAsync(item);
                 }
-                await db.SaveChangesAsync();
+                await _db.SaveChangesAsync();
+            }
+        }
+
+        private static async Task CreateFriendshipStatuses()
+        {
+            if (!_db.FriendshipStatus.Any())
+            {
+                foreach (var item in _data.FriendshipStatuses)
+                {
+                    await _db.FriendshipStatus.AddAsync(item);
+                }
+                await _db.SaveChangesAsync();
+            }
+        }
+        
+        private static async Task CreateFrequencies()
+        {
+            if (!_db.Frequency.Any())
+            {
+                foreach(Frequency f in _data.Frequencies)
+                {
+                    await _db.Frequency.AddAsync(f);
+                }   
+                await _db.SaveChangesAsync();
             }
         }
     }

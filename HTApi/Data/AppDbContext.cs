@@ -1,4 +1,5 @@
-﻿using HTAPI.Models;
+﻿using HTApi.Models;
+using HTAPI.Models;
 using HTAPI.Models.ChallengeGoals;
 using HTAPI.Models.Challenges;
 using HTAPI.Models.DemographicData;
@@ -30,10 +31,14 @@ namespace HTAPI.Data
         // Friendships 
         public DbSet<Friendship> Friendship { get; set; }
         public DbSet<FriendshipStatus> FriendshipStatus { get; set; }
+        
+        // Token Blocklist
+        public DbSet<TokenBlockList> TokenBlockList { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
+            
             optionsBuilder.UseNpgsql("Host=localhost; Port=5432; Database=habitTracker-api-db; Username=; Password=; Client Encoding=UTF8");
         }
 
@@ -100,6 +105,11 @@ namespace HTAPI.Data
                 .WithMany()
                 .HasForeignKey(f => f.TargetId)
                 .OnDelete(DeleteBehavior.Cascade);
+            builder.Entity<Friendship>()
+                .HasOne(f => f.Status)
+                .WithMany()
+                .HasForeignKey(f => f.StatusId)
+                .OnDelete(DeleteBehavior.SetNull);
 
 
             // Friendship Status config
@@ -111,6 +121,12 @@ namespace HTAPI.Data
             builder.Entity<User>()
                 .HasIndex(u => u.UUID)
                 .IsUnique();
+            builder.Entity<User>()
+                .Property(u => u.CreatedAt)
+                .HasColumnType("timestamp(6)");
+            builder.Entity<User>()
+               .Property(u => u.UpdatedAt)
+               .HasColumnType("timestamp(6)");
 
             // Frequency config
             builder.Entity<Frequency>()

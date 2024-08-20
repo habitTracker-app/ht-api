@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using HTAPI.Data;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HTAPI.Models.Friendships
 {
@@ -18,6 +20,13 @@ namespace HTAPI.Models.Friendships
         public int StatusId { get; set; }
         public virtual FriendshipStatus Status { get; set; }
 
+        [Required]
+        [DataType(DataType.DateTime)]
+        public DateTime CreatedAt { get; set; }
+
+        [Required]
+        [DataType(DataType.DateTime)]
+        public DateTime UpdatedAt { get; set; }
 
     }
 }

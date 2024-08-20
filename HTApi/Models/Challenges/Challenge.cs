@@ -28,9 +28,17 @@ namespace HTAPI.Models.Challenges
         [Required] [DataType(DataType.Date)]
         public DateTime StartDate { get; set; }
 
-        [DataType(DataType.Date)] public DateTime? EndDate { get; set; }
+        [DataType(DataType.Date)] public DateTime EndDate { get; set; } = DateTime.MaxValue;
 
         [Required]
         public bool Active { get; set; } = true;
+
+        [Required]
+        [DataType(DataType.DateTime)]
+        public DateTime CreatedAt { get; set; }
+
+        [Required]
+        [DataType(DataType.DateTime)]
+        public DateTime UpdatedAt { get; set; }
     }
 }
