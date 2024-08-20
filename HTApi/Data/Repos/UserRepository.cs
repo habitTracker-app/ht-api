@@ -1,5 +1,6 @@
 ﻿using HTApi.DTOs;
 using HTApi.Models.ActionModels;
+using HTApi.Models.Exceptions;
 using HTAPI.Data;
 using HTAPI.Models;
 using HTAPI.Models.ActionModels;
@@ -14,16 +15,17 @@ namespace HTApi.Data.Repos
         UserDTO GetUser (int uuid);
         Task<UserDTO> CreateUser(RegisterUser body, Gender gender, Country country);
         Task UpdateUserActiveStatus(User user);
-        Task<List<UserDTO>> GetAllUsers(int page, int itemsPerPage);
+        List<UserDTO> GetAllUsers(int page, int itemsPerPage);
         Task DeleteUser(int uuid);
 
         Task UpdateUser(User user, UpdateUserInfo data, Gender gender, Country country);
+        Task ChangeUserPassword(ChangePassword body, User user);
     }
     public class UserRepository : IUserRepository
     {
-        public static AppDbContext _db;
-        public static UserManager<User> _um;
-        public static SignInManager<User> _sm;
+        public static AppDbContext? _db;
+        public static UserManager<User>? _um;
+        public static SignInManager<User>? _sm;
 
         public UserRepository(IServiceProvider sp)
         {
@@ -49,8 +51,8 @@ namespace HTApi.Data.Repos
             {
                 Email = body.Email,
                 UserName = NormalizeString($"{body.FName}{body.LName}"),
-                Gender = gender, // todo
-                Country = country, // todo
+                Gender = gender, 
+                Country = country, 
                 AcceptedTerms = body.TermsAccepted,
                 UserActive = true,
                 BirthDate = body.BirthDate,
@@ -70,34 +72,40 @@ namespace HTApi.Data.Repos
                 string errors = "";
                 foreach (var err in res.Errors)
                 {
-                    errors += $"{err.Description}--";
+                    errors += $"{err.Description};";
                 }
-                throw new Exception(errors);
+                throw new BadRequestException(errors, 400);
             }
         }
            
 
         public async Task UpdateUserActiveStatus(User user)
         {
-            user.UserActive = !user.UserActive;
-            user.UpdatedAt = DateTime.UtcNow;
-            _db.Users.Update(user);
-            await _db.SaveChangesAsync();
+            try
+            {
+                user.UserActive = !user.UserActive;
+                user.UpdatedAt = DateTime.UtcNow;
+                _db.Users.Update(user);
+                await _db.SaveChangesAsync();
+            }catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
 
-        public async Task<List<UserDTO>> GetAllUsers(int page, int itemsPerPage)
+        public List<UserDTO> GetAllUsers(int page, int itemsPerPage)
         {
             int userCount = _db.Users.Count();
             if(page > userCount/itemsPerPage) {
-                throw new Exception("This page does not exist.");
+                throw new BadRequestException("This page does not exist.", 404);
             }
             if(page < 1)
             {
-                throw new Exception("Pages must be 1 or higher.");
+                throw new BadRequestException("Pages must be 1 or higher.", 406);
             }
             if(itemsPerPage > 50)
             {
-                throw new Exception("Can only get a maximum of 50 users per page.");
+                throw new BadRequestException("Can only get a maximum of 50 users per page.", 406);
             }
 
             int countToSkip = itemsPerPage * (page - 1);
@@ -119,7 +127,7 @@ namespace HTApi.Data.Repos
 
             if(user == null)
             {
-                throw new Exception($"Unable to delete user {uuid}. User not found!");
+                throw new BadRequestException($"Unable to delete user {uuid}. User not found!", 404);
             }
             try {
                 _db.Users.Remove(user);
@@ -128,7 +136,6 @@ namespace HTApi.Data.Repos
             } catch(Exception e) {
                 throw new Exception(e.Message);
             }
-
         }
 
         public async Task UpdateUser(User user, UpdateUserInfo data, Gender gender, Country country)
@@ -155,6 +162,33 @@ namespace HTApi.Data.Repos
                 throw new Exception(e.Message);
             }
         }
+
+        public async Task ChangeUserPassword(ChangePassword body, User user)
+        {
+            try
+            {
+                var result = await _um.ChangePasswordAsync(user, body.OldPassword, body.NewPassword);
+                if (!result.Succeeded)
+                {
+                    List<String> errors = new List<String>();
+                    foreach (var error in result.Errors)
+                    {
+                        errors.Add(error.Description);
+                    }
+                    throw new BadRequestException(String.Join("; ", errors), 400);
+                }
+            }
+            catch (BadRequestException e)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+
+        }
+
 
         private string NormalizeString(string input)
         {

@@ -1,4 +1,5 @@
-﻿using HTAPI.Models;
+﻿using HTApi.Models;
+using HTAPI.Models;
 using HTAPI.Models.ChallengeGoals;
 using HTAPI.Models.Challenges;
 using HTAPI.Models.DemographicData;
@@ -30,6 +31,9 @@ namespace HTAPI.Data
         // Friendships 
         public DbSet<Friendship> Friendship { get; set; }
         public DbSet<FriendshipStatus> FriendshipStatus { get; set; }
+        
+        // Token Blocklist
+        public DbSet<TokenBlockList> TokenBlockList { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
