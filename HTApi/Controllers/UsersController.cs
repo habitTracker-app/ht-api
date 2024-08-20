@@ -10,6 +10,7 @@ using HTApi.Models.ActionModels;
 using HTApi.Models;
 using HTAPI.Models.DemographicData;
 using HTApi.DTOs;
+using HTApi.Models.Exceptions;
 
 namespace HTApi.Controllers
 {
@@ -37,6 +38,18 @@ namespace HTApi.Controllers
             _userRepo = ur;
             _genderRepository = gr;
             _countryRepository = cr;
+        }
+        [Authorize]
+        [HttpGet]
+        [Route("/users/all")]
+        public ActionResult<List<UserDTO>> GetAllUsers([FromQuery] int? count, [FromQuery] int? page)
+        {
+            if (page == null) { page = 1; }
+            if (count == null) { count = 1; }
+
+            List<UserDTO> users = _userRepo.GetAllUsers((int)page, (int)count);
+
+            return Ok(new { users });
         }
 
         [Authorize]
@@ -75,25 +88,121 @@ namespace HTApi.Controllers
             {
                 User user = _jwt.GetUserByJWT();
 
-                _userRepo.UpdateUser(user, body, gender, country);
+                await _userRepo.UpdateUser(user, body, gender, country);
 
                 UserDTO userDto = new UserDTO(user);
 
                 return Ok(userDto);
 
-            }catch (Exception ex)
+            }
+            catch(BadRequestException bex)
             {
-                if (ex.Message.Contains("400"))
-                {
-                    return BadRequest($"{ex.Message}");
-                }
-                else
-                {
-                    return StatusCode(500, ex.Message);
-                }
+                return BadRequest(bex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
             }
 
 
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route("/user/inactivate")]
+        public async Task<IActionResult> InactivateAccount(InactivateAccount body)
+        {
+            if(body == null || !ModelState.IsValid) { return BadRequest(ModelState); }
+
+            try
+            {
+                User user = _jwt.GetUserByJWT();
+
+                await _checkPassword(user, body.Password);
+                await _userRepo.UpdateUserActiveStatus(user);
+                await _jwt.BlockJWT();
+
+                return Ok(user);
+            }
+            catch(BadRequestException bex)
+            {
+                return BadRequest(bex.Message);
+
+            }
+            catch (Exception ex) 
+            {
+
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+
+        [Authorize]
+        [HttpPost]
+        [Route("/user/delete")]
+        public async Task<ActionResult> DeleteUser([FromBody] DeleteUser body)
+        {
+            int? uuid = body.uuid;
+            string? password = body.password;
+            try
+            {
+                if (uuid == null) { throw new BadRequestException("UUID is a mandatory parameter.", 406); }
+
+                User? user = _db.Users.FirstOrDefault(u => u.UUID == uuid) ?? throw new BadRequestException("This user does not exist.", 404);
+
+                User? requester = _jwt.GetUserByJWT();
+
+                if (user != requester) { throw new BadRequestException("You don't have permission to delete this user.", 401); }
+
+                await _checkPassword(user, password);
+                await _userRepo.DeleteUser((int)uuid);
+                await _jwt.BlockJWT();
+                return NoContent();
+            }
+            catch (BadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route("/user/change-pswd")]
+        public async Task<IActionResult> ChangePassword(ChangePassword body)
+        {
+            if(body == null || !ModelState.IsValid) { return BadRequest(ModelState); }
+
+            try
+            {
+                User user = _jwt.GetUserByJWT();
+
+                await _userRepo.ChangeUserPassword(body, user);
+
+                return Ok();
+            }
+            catch (BadRequestException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, e.Message);
+            }
+            
+
+            
+            
+        }
+
+        private async Task<bool> _checkPassword(User user, string password)
+        {
+            bool isPasswordCorrect = await _um.CheckPasswordAsync(user, password);
+            if (!isPasswordCorrect) { throw new BadRequestException("Password is incorrect.", 403); }
+            return isPasswordCorrect;
         }
     }
 }
