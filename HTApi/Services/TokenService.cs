@@ -1,6 +1,9 @@
 ﻿using HTApi.DTOs;
+using HTApi.Models;
+using HTApi.Models.Exceptions;
 using HTAPI.Data;
 using HTAPI.Models;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -13,6 +16,7 @@ namespace HTApi.Services
     {
         string GenerateJwtToken(string email, bool persist, int uuid, string identityUserId);
         User GetUserByJWT();
+        Task BlockJWT();
     }
     public class TokenService : ITokenService
     {
@@ -59,13 +63,28 @@ namespace HTApi.Services
 
             return tokenHandler.WriteToken(token);
         }
+
+        public bool IsJWTValid()
+        {
+            var token = _http.HttpContext.Request.Headers.Authorization.ToString();
+
+            if(_db.TokenBlockList.Any(blocked => blocked.Token == token))
+            {
+                return false;
+            }
+            return true;
+        }
         
         public User GetUserByJWT()
         {
+            if (!IsJWTValid())
+            {
+                throw new BadRequestException("This JWT is blocked.", 403);
+            }
             ClaimsIdentity claimsIdentity = _http.HttpContext.User.Identity as ClaimsIdentity;
             var claims = claimsIdentity?.Claims;
 
-            if (claims == null) { throw new Exception("No claims found in jwt."); }
+            if (claims == null) { throw new BadRequestException("No claims found in jwt.", 403); }
 
             UserClaimsDTO userClaimsDTO = new UserClaimsDTO
             {
@@ -73,15 +92,38 @@ namespace HTApi.Services
                 UUID = claims.FirstOrDefault(c => c.Type == ClaimTypes.SerialNumber)?.Value
             };
 
-            Console.WriteLine(userClaimsDTO.UUID);
-            Console.WriteLine(userClaimsDTO.Id);
 
             User? requester = _db.Users.FirstOrDefault(u => (u.Id == userClaimsDTO.Id) &&
                                                             (u.UUID.ToString() == userClaimsDTO.UUID.ToString()));
 
-            if (requester == null) { throw new Exception("400 - This user does not exist."); }
+            if (requester == null) { throw new BadRequestException("This user does not exist.", 404); }
 
             return requester;
+        }
+
+        public async Task BlockJWT()
+        {
+            var token = _http.HttpContext.Request.Headers.Authorization;
+            try
+            {
+
+                TokenBlockList blocked = new TokenBlockList()
+                {
+                    InactivatedAt = DateTime.UtcNow,
+                    Token = token
+                };
+                _db.TokenBlockList.Add(blocked);
+
+                await _db.SaveChangesAsync();
+            }
+            catch (BadRequestException ex)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(token, ex);
+            }
         }
     }
 }

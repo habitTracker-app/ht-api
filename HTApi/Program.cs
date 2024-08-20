@@ -38,10 +38,15 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITokenService>(sp => new TokenService(config, sp));
 builder.Services.AddScoped<IValidationService>(sp => new ValidationService(sp));
+builder.Services.AddScoped<IUtilitiesService>(sp => new UtilitiesService());
+
 builder.Services.AddScoped<IUserRepository>(sp => new UserRepository(sp));
 builder.Services.AddScoped<IGenderRepository>(sp => new GenderRepository(sp));
 builder.Services.AddScoped<ICountryRepository>(sp => new CountryRepository(sp));
 builder.Services.AddScoped<IFriendshipRepository>(sp => new FriendshipRepository(sp));
+builder.Services.AddScoped<IChallengeRepository>(sp => new ChallengeRepository(sp));
+builder.Services.AddScoped<IGoalRepository>(sp => new GoalRepository(sp));
+builder.Services.AddScoped<IProgressRepository>(sp => new ProgressRepository(sp));
 
 builder.Services.AddIdentity<User, IdentityRole>(options =>
 {
