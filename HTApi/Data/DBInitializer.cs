@@ -1,4 +1,5 @@
-﻿using HTAPI.Models.DemographicData;
+﻿using HTAPI.Models.ChallengeGoals;
+using HTAPI.Models.DemographicData;
 using System.Diagnostics.Eventing.Reader;
 
 namespace HTAPI.Data
@@ -19,6 +20,7 @@ namespace HTAPI.Data
             await CreateGenders();
             await CreateCategories();
             await CreateFriendshipStatuses();
+            await CreateFrequencies();
         }
 
         private static async Task CreateGenders()
@@ -70,6 +72,18 @@ namespace HTAPI.Data
                 {
                     await _db.FriendshipStatus.AddAsync(item);
                 }
+                await _db.SaveChangesAsync();
+            }
+        }
+        
+        private static async Task CreateFrequencies()
+        {
+            if (!_db.Frequency.Any())
+            {
+                foreach(Frequency f in _data.Frequencies)
+                {
+                    await _db.Frequency.AddAsync(f);
+                }   
                 await _db.SaveChangesAsync();
             }
         }
