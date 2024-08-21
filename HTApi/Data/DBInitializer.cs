@@ -14,8 +14,8 @@ namespace HTAPI.Data
         public static async Task Initialize(IServiceProvider serviceProvider)
         {
             _sp = serviceProvider;
-            _db = _sp.GetService<AppDbContext>() ?? throw new Exception("Service unavailable.");
-
+            _db = _sp.GetRequiredService<AppDbContext>() ?? throw new Exception("Service unavailable.");
+            _db.Database.EnsureCreated();
             await CreateCountries();
             await CreateGenders();
             await CreateCategories();

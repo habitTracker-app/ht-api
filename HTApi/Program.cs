@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using System.Text.Json.Serialization;
 using HTApi.Services;
 using HTApi.Data.Repos;
+using Microsoft.Extensions.Configuration.EnvironmentVariables;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +17,6 @@ ConfigurationManager config = builder.Configuration;
 
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
 
 // Add services to the container.
 builder.Services.AddControllers()
@@ -31,7 +31,7 @@ builder.Services.AddControllers()
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseNpgsql(connectionString: builder.Configuration.GetConnectionString("AuthApiDb"));
+    options.UseNpgsql(connectionString: "Server=ht-api-db-server.postgres.database.azure.com;Database=postgres;Port=5432;User Id=postgres;Password=T3k6ond$;Ssl Mode=Require;");
 });
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
@@ -109,6 +109,9 @@ using (var scope = app.Services.CreateScope())
     var s = scope.ServiceProvider;
     try
     {
+        //AppDbContext dbContext = s.GetRequiredService<AppDbContext>();
+        //dbContext.Database.Migrate();
+
         DBInitializer.Initialize(s).Wait();
     }
     catch (Exception ex)

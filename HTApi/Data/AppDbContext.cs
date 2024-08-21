@@ -39,7 +39,7 @@ namespace HTAPI.Data
         {
             base.OnConfiguring(optionsBuilder);
             
-            optionsBuilder.UseNpgsql("Host=localhost; Port=5432; Database=habitTracker-api-db; Username=; Password=; Client Encoding=UTF8");
+            optionsBuilder.UseNpgsql("Server=ht-api-db-server.postgres.database.azure.com;Database=postgres;Port=5432;User Id=postgres;Password=T3k6ond$;Ssl Mode=Require;");
         }
 
         protected override void OnModelCreating(ModelBuilder builder)
